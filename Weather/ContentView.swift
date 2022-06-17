@@ -9,20 +9,27 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Color.red
-                .frame(height: 300)
-            TabView {
-                Text("One")
-                    .tabItem {
-                        Text("Test 1")
+        NavigationView {
+            CurrentWeatherView()
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        VStack {
+                            Text("Title").font(.headline)
+                            Text("Subtitle").font(.subheadline)
+                        }
                     }
-                Text("Two")
-                    .tabItem {
-                        Text("Test 1")
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                                
+                            }) {
+                                Image(systemName: "magnifyingglass").imageScale(.large)
+                            }
+                            .tint(Color.black)
                     }
-            }
-            .background(Color.red)
+                }
+            
         }
     }
 }
