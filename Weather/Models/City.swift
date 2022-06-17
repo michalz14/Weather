@@ -36,11 +36,6 @@ struct City: Decodable {
 }
 
 struct Coordinates {
-    var latitude: Double
-    var longitude: Double
-    
-    init() {
-        latitude = 52.18593662
-        longitude = 20.9902265
-    }
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
 }

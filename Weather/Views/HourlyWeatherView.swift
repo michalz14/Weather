@@ -9,15 +9,17 @@ import SwiftUI
 
 struct HourlyWeatherView: View {
     
+    let viewModel: HourlyWeatherViewModel
+    
     var body: some View {
         CardView {
             VStack(spacing: 12) {
-                Text("Test")
+                Text(viewModel.time)
                     .font(.body)
                 Image(systemName: "cloud.moon")
-                Text("23")
+                Text(viewModel.temperature)
                     .font(.title)
-                Text("Test")
+                Text(viewModel.cloud)
                     .font(.body)
             }
         }
@@ -26,6 +28,6 @@ struct HourlyWeatherView: View {
 
 struct HourlyWeatherView_Previews: PreviewProvider {
     static var previews: some View {
-        HourlyWeatherView()
+        HourlyWeatherView(viewModel: HourlyWeatherViewModel(weather: DailyWeatherView_Previews.weather))
     }
 }

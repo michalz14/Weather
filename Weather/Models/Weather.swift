@@ -16,11 +16,11 @@ struct Weather: Decodable {
         case dt, weather, clouds, wind_speed, temp, humidity, pressure
     }
     
-    var clouds: Double
-    var datestamp: Int64
-    var humidity: Double
-    var pressure: Double
-    var wind: Double
+    var clouds: Double = 0.0
+    var datestamp: Int64 = 0
+    var humidity: Double = 0.0
+    var pressure: Double = 0.0
+    var wind: Double = 0.0
     var currentTemperature: Double?
     var descriptor: [WeatherDescriptor]?
     var temperature: Temperature?
@@ -42,4 +42,6 @@ struct Weather: Decodable {
             currentTemperature = try container.decode(Double.self, forKey: WeatherKeys.temp)
         }
     }
+    
+    init() { }
 }

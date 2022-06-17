@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         NavigationView {
-            CurrentWeatherView()
+            CurrentWeatherView(viewModel: CurrentWeatherViewModel(weather: DailyWeatherView_Previews.weather))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .principal) {

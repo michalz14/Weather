@@ -8,10 +8,14 @@
 import Foundation
 
 struct Temperature: Decodable {
-    var day: Double
-    var eve: Double
-    var max: Double
-    var min: Double
-    var morn: Double
-    var night: Double
+    var day: Double = 0.0
+    var eve: Double = 0.0
+    var max: Double = 0.0
+    var min: Double = 0.0
+    var morn: Double = 0.0
+    var night: Double = 0.0
+    
+    init() {
+        
+    }
 }

@@ -8,28 +8,31 @@
 import SwiftUI
 
 struct DailyWeatherView: View {
+    
+    let viewModel: DailyWeatherViewModel
+    
     var body: some View {
         CardView {
             ZStack {
                 HStack {
                     VStack(alignment: .leading) {
-                        Text("Data")
-                        Text("Dzień")
+                        Text(viewModel.date)
+                        Text(viewModel.weekday)
                     }
                     Spacer()
                     Spacer()
                     Image(systemName: "cloud.moon")
                     Spacer()
                     VStack(alignment: .trailing) {
-                        Text("23")
-                        Text("16")
+                        Text(viewModel.maxTemperature)
+                        Text(viewModel.minTemperature)
                             .foregroundColor(Color.gray)
                     }
                     Spacer()
-                    Text("-")
+                    Text(viewModel.cloud)
                     Spacer()
                     VStack(alignment: .center) {
-                        Text("4")
+                        Text(viewModel.wind)
                         Image(systemName: "arrow.up.right")
                     }
                 }
@@ -39,8 +42,21 @@ struct DailyWeatherView: View {
 }
 
 struct DailyWeatherView_Previews: PreviewProvider {
+    
+    static var weather: Weather {
+        var weather = Weather()
+        weather.datestamp = 1_655_449_365
+        weather.wind = 4
+        weather.clouds = 100
+        weather.currentTemperature = 20
+        weather.temperature = Temperature()
+        weather.temperature?.max = 24
+        weather.temperature?.min = 13
+        return weather
+    }
+    
     static var previews: some View {
-        DailyWeatherView()
+        DailyWeatherView(viewModel: DailyWeatherViewModel(weather: weather))
             .padding()
     }
 }
