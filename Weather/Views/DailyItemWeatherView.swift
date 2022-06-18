@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct DailyWeatherView: View {
+struct DailyItemWeatherView: View {
     
-    let viewModel: DailyWeatherViewModel
+    let viewModel: DailyItemWeatherViewModel
     
     var body: some View {
         CardView {
@@ -56,7 +56,7 @@ struct DailyWeatherView_Previews: PreviewProvider {
     }
     
     static var previews: some View {
-        DailyWeatherView(viewModel: DailyWeatherViewModel(weather: weather))
+        DailyItemWeatherView(viewModel: DailyItemWeatherViewModel(weather: weather))
             .padding()
     }
 }

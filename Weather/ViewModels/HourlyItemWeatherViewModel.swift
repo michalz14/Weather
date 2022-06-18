@@ -7,8 +7,9 @@
 
 import Foundation
 
-struct HourlyWeatherViewModel {
+struct HourlyItemWeatherViewModel: Identifiable {
     
+    let id = UUID()
     let time: String
     let icon: String
     let temperature: String

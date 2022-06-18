@@ -39,3 +39,14 @@ struct Coordinates {
     var latitude: Double = 0.0
     var longitude: Double = 0.0
 }
+
+#if DEBUG
+
+extension City {
+
+    static var load: City {
+        WeatherLoader().loadWeather()
+    }
+}
+
+#endif

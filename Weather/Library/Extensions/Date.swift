@@ -17,6 +17,7 @@ extension Date {
     func stringFormat(_ format: DateStringFormat) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = format.rawValue
+        formatter.timeZone = .current
         return formatter.string(from: self)
     }
 }

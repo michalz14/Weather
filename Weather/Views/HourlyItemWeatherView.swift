@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct HourlyWeatherView: View {
+struct HourlyItemWeatherView: View {
     
-    let viewModel: HourlyWeatherViewModel
+    let viewModel: HourlyItemWeatherViewModel
     
     var body: some View {
         CardView {
@@ -28,6 +28,6 @@ struct HourlyWeatherView: View {
 
 struct HourlyWeatherView_Previews: PreviewProvider {
     static var previews: some View {
-        HourlyWeatherView(viewModel: HourlyWeatherViewModel(weather: DailyWeatherView_Previews.weather))
+        HourlyItemWeatherView(viewModel: HourlyItemWeatherViewModel(weather: DailyWeatherView_Previews.weather))
     }
 }
