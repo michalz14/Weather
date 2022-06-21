@@ -7,8 +7,9 @@
 
 import Foundation
 
-struct DailyViewModel {
+struct DailyViewModel: Identifiable {
     
+    let id = UUID()
     var items = [DailyItemWeatherViewModel]()
     
     init(items: [Weather]) {

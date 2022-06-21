@@ -35,6 +35,12 @@ struct City: Decodable {
     }
 }
 
+extension City: Equatable {
+    static func == (lhs: City, rhs: City) -> Bool {
+        lhs.name == rhs.name
+    }
+}
+
 struct Coordinates {
     var latitude: Double = 0.0
     var longitude: Double = 0.0

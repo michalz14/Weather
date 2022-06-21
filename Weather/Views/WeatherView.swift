@@ -8,39 +8,53 @@
 import SwiftUI
 
 struct WeatherView: View {
+    
+    @ObservedObject var viewModel: WeatherViewModel
+    
     var body: some View {
         NavigationView {
-            VStack {
-                CurrentWeatherView(viewModel: CurrentWeatherViewModel(weather: City.load.current!))
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        titleView()
-                        cityIcon()
-                    }
-                tabbar()
+            if let currentVM = viewModel.currentWeatherViewModel,
+               let hourlyVM = viewModel.hourlyWeatherViewModel,
+               let dailyVM = viewModel.dailyWeatherViewModel {
+                VStack {
+                    CurrentWeatherView(viewModel: currentVM)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            titleView()
+                            cityIcon()
+                        }
+                    tabbar(hourlyVM: hourlyVM, dailyVM: dailyVM)
+                }
+            } else {
+                EmptyView()
             }
         }
+        .navigationViewStyle(.stack)
+//        .onAppear {
+//            viewModel.fetchHourlyWeather()
+//            viewModel.fetchDailyWeather()
+//        }
     }
     
-    private func tabbar() -> some View {
+    private func tabbar(hourlyVM: HourlyViewModel, dailyVM: DailyViewModel) -> some View {
         TabView {
-            HourlyView(viewModel: HourlyViewModel(items: City.load.hourlyWeather ?? []))
+            HourlyView(viewModel: hourlyVM)
                 .tabItem {
-                    Label("Menu", systemImage: "list.dash")
+                    Label("Hourly", systemImage: "list.dash")
                 }
             
-            DailyView(viewModel: DailyViewModel(items: City.load.dailyWeather ?? []))
+            DailyView(viewModel: dailyVM)
                 .tabItem {
-                    Label("Order", systemImage: "square.and.pencil")
+                    Label("Daily", systemImage: "square.and.pencil")
                 }
         }
     }
     
     private func cityIcon() -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button(action: {
-                
-            }) {
+            NavigationLink {
+                CitiesView(viewModel: CitiesViewModel(cities: CityLoader().loadCities(), city: $viewModel.city))
+            } label: {
                 Image(systemName: "magnifyingglass").imageScale(.large)
             }
             .tint(Color.black)
@@ -50,15 +64,16 @@ struct WeatherView: View {
     private func titleView() -> some ToolbarContent {
         ToolbarItem(placement: .principal) {
             VStack {
-                Text("Title").font(.headline)
-                Text("Subtitle").font(.subheadline)
+                Text("Pogoda").font(.headline)
+                Text(viewModel.cityName.output).font(.subheadline)
             }
         }
     }
 }
 
 struct WeatherView_Previews: PreviewProvider {
+    
     static var previews: some View {
-        WeatherView()
+        WeatherView(viewModel: WeatherViewModel(city: City.load, repository: WeatherRepository()))
     }
 }

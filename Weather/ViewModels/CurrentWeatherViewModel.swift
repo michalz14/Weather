@@ -7,8 +7,9 @@
 
 import Foundation
 
-struct CurrentWeatherViewModel {
+struct CurrentWeatherViewModel: Identifiable {
     
+    let id = UUID()
     let icon: String
     let temperature: String
     
