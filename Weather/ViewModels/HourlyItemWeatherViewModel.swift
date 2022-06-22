@@ -11,13 +11,13 @@ struct HourlyItemWeatherViewModel: Identifiable {
     
     let id = UUID()
     let time: String
-    let icon: String
+    let icon: URL?
     let temperature: String
     let cloud: String
     
     init(weather: Weather) {
         time = weather.datestamp.date.stringFormat(.time)
-        icon = weather.descriptor?.first?.icon ?? ""
+        icon = ImageViewModel.iamgeURL(for: weather.descriptor?.first?.icon ?? "")
         temperature = Formatters.Temperature.celsius(Int(weather.currentTemperature ?? 0.0))
         cloud = "\(weather.clouds)"
     }

@@ -20,6 +20,9 @@ final class WeatherViewModel: ObservableObject {
     @Published var hourlyWeatherViewModel: HourlyViewModel?
     @Published var dailyWeatherViewModel: DailyViewModel?
     
+    private var hourlySubscribption: AnyCancellable?
+    private var dailySubscribption: AnyCancellable?
+    
     init(city: City, repository: WeatherRepositoryProtocol) {
         cityName = Just(city.name ?? "")
         self.city = city
@@ -34,13 +37,11 @@ final class WeatherViewModel: ObservableObject {
     private func subscribe() {
         _city.projectedValue
             .removeDuplicates()
-            .sink { _ in
-            /* nop */
-        } receiveValue: { [weak self] city in
-            self?.cityName = Just(city.name ?? "")
-            self?.fetchHourlyWeather()
-            self?.fetchDailyWeather()
-        }
+            .sink(receiveValue: {  [weak self] city in
+                self?.cityName = Just(city.name ?? "")
+                self?.fetchHourlyWeather()
+                self?.fetchDailyWeather()
+            })
         .store(in: &bag)
     }
     
@@ -60,29 +61,23 @@ final class WeatherViewModel: ObservableObject {
 extension WeatherViewModel {
     
     func fetchHourlyWeather() {
-        repository.hourlyWeather(for: city.coordinates)
+        hourlySubscribption = repository.hourlyWeather(for: city.coordinates)
             .mapError({ _ in fatalError() })
             .eraseToAnyPublisher()
-            .sink(receiveCompletion: { _ in
-                /* nop */
-            }, receiveValue: { [weak self] city in
+            .sink(receiveValue: { [weak self] city in
                 self?.city.current = city.current
                 self?.city.hourlyWeather = city.hourlyWeather
                 self?.setupViewModels()
             })
-            .store(in: &bag)
     }
     
     func fetchDailyWeather() {
-         repository.dailyWeather(for: city.coordinates)
+         dailySubscribption = repository.dailyWeather(for: city.coordinates)
             .mapError({ _ in fatalError() })
             .eraseToAnyPublisher()
-            .sink(receiveCompletion: { _ in
-                /* nop */
-            }, receiveValue: { [weak self] city in
+            .sink(receiveValue: { [weak self] city in
                 self?.city.dailyWeather = city.dailyWeather
                 self?.setupViewModels()
             })
-            .store(in: &bag)
     }
 }

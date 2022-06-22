@@ -9,32 +9,36 @@ import SwiftUI
 
 struct DailyItemWeatherView: View {
     
+    private struct Constants {
+        static let itemWidth: CGFloat = 42.0
+    }
     let viewModel: DailyItemWeatherViewModel
     
     var body: some View {
         CardView {
             ZStack {
-                HStack {
+                HStack(spacing: 16) {
                     VStack(alignment: .leading) {
                         Text(viewModel.date)
+                            .font(.caption)
                         Text(viewModel.weekday)
                     }
                     Spacer()
-                    Spacer()
-                    Image(systemName: "cloud.moon")
-                    Spacer()
+                    RemoteImage(url: viewModel.icon)
+                        .frame(width: 26, height: 26)
                     VStack(alignment: .trailing) {
                         Text(viewModel.maxTemperature)
                         Text(viewModel.minTemperature)
                             .foregroundColor(Color.gray)
                     }
-                    Spacer()
+                    .frame(width: Constants.itemWidth)
                     Text(viewModel.cloud)
-                    Spacer()
+                        .frame(width: Constants.itemWidth)
                     VStack(alignment: .center) {
                         Text(viewModel.wind)
                         Image(systemName: "arrow.up.right")
                     }
+                    .frame(width: Constants.itemWidth)
                 }
             }
         }

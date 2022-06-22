@@ -30,10 +30,6 @@ struct WeatherView: View {
             }
         }
         .navigationViewStyle(.stack)
-//        .onAppear {
-//            viewModel.fetchHourlyWeather()
-//            viewModel.fetchDailyWeather()
-//        }
     }
     
     private func tabbar(hourlyVM: HourlyViewModel, dailyVM: DailyViewModel) -> some View {

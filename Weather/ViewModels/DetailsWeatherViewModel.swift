@@ -33,12 +33,12 @@ struct DetailsWeatherViewModel {
                                          value: "\(weather.clouds)")
         
         humidity = DetailsElementViewModel(title: "Wilgotność",
-                                           icon: "cloud.sleet.fill",
+                                           icon: "humidity",
                                            name: "Suma",
                                            value: "\(weather.humidity)")
         
         pressure = DetailsElementViewModel(title: "Ciśnienie",
-                                           icon: "cloud.sleet.fill",
+                                           icon: "aqi.low",
                                            name: "Suma",
                                            value: "\(weather.pressure)")
     }

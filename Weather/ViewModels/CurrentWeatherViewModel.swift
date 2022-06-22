@@ -10,14 +10,14 @@ import Foundation
 struct CurrentWeatherViewModel: Identifiable {
     
     let id = UUID()
-    let icon: String
+    let icon: URL?
     let temperature: String
     
     let detailsViewModel: DetailsWeatherViewModel
     
     
     init(weather: Weather) {
-        icon = weather.descriptor?.first?.icon ?? ""
+        icon = ImageViewModel.iamgeURL(for: weather.descriptor?.first?.icon ?? "")
         temperature = "\(Int(weather.currentTemperature ?? 0.0))"
         detailsViewModel = DetailsWeatherViewModel(weather: weather)
     }

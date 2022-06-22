@@ -14,8 +14,7 @@ struct CurrentWeatherView: View {
     var body: some View {
         VStack(spacing: 16) {
             HStack {
-                Image(systemName: "cloud.moon")
-                    .resizable()
+                RemoteImage(url: viewModel.icon)
                     .frame(width: 102, height: 102)
                 Spacer()
                 HStack(alignment: .lastTextBaseline) {

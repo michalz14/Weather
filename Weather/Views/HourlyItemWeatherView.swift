@@ -16,7 +16,7 @@ struct HourlyItemWeatherView: View {
             VStack(spacing: 12) {
                 Text(viewModel.time)
                     .font(.body)
-                Image(systemName: "cloud.moon")
+                RemoteImage(url: viewModel.icon)
                 Text(viewModel.temperature)
                     .font(.title)
                 Text(viewModel.cloud)
