@@ -26,6 +26,10 @@
 		629F349D286221D700E3AA1C /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629F349C286221D700E3AA1C /* View.swift */; };
 		629F34A02862FF1E00E3AA1C /* RemoteImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629F349F2862FF1E00E3AA1C /* RemoteImage.swift */; };
 		629F34A32863000200E3AA1C /* RemoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629F34A22863000200E3AA1C /* RemoteViewModel.swift */; };
+		629F34A72863143700E3AA1C /* StubCityPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629F34A62863143700E3AA1C /* StubCityPreferences.swift */; };
+		629F34A9286314E200E3AA1C /* ContentViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629F34A8286314E200E3AA1C /* ContentViewModelTests.swift */; };
+		629F34AB2863199200E3AA1C /* StubWeatherRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629F34AA2863199200E3AA1C /* StubWeatherRepository.swift */; };
+		629F34AD28631A1E00E3AA1C /* WeatherViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629F34AC28631A1E00E3AA1C /* WeatherViewModelTests.swift */; };
 		62AAD449285D90EE008D64FC /* WeatherRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AAD448285D90EE008D64FC /* WeatherRepository.swift */; };
 		62AAD44B285D9465008D64FC /* WeatherTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AAD44A285D9465008D64FC /* WeatherTarget.swift */; };
 		62AAD44D285DCB65008D64FC /* WeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AAD44C285DCB65008D64FC /* WeatherViewModel.swift */; };
@@ -89,6 +93,10 @@
 		629F349C286221D700E3AA1C /* View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
 		629F349F2862FF1E00E3AA1C /* RemoteImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteImage.swift; sourceTree = "<group>"; };
 		629F34A22863000200E3AA1C /* RemoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteViewModel.swift; sourceTree = "<group>"; };
+		629F34A62863143700E3AA1C /* StubCityPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubCityPreferences.swift; sourceTree = "<group>"; };
+		629F34A8286314E200E3AA1C /* ContentViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewModelTests.swift; sourceTree = "<group>"; };
+		629F34AA2863199200E3AA1C /* StubWeatherRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubWeatherRepository.swift; sourceTree = "<group>"; };
+		629F34AC28631A1E00E3AA1C /* WeatherViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModelTests.swift; sourceTree = "<group>"; };
 		62AAD448285D90EE008D64FC /* WeatherRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherRepository.swift; sourceTree = "<group>"; };
 		62AAD44A285D9465008D64FC /* WeatherTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTarget.swift; sourceTree = "<group>"; };
 		62AAD44C285DCB65008D64FC /* WeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModel.swift; sourceTree = "<group>"; };
@@ -183,6 +191,7 @@
 		628AE03D285B94C50021A880 /* WeatherTests */ = {
 			isa = PBXGroup;
 			children = (
+				629F34A5286313EB00E3AA1C /* Mocks */,
 				629F34A42863139A00E3AA1C /* ViewModels */,
 				628AE03E285B94C50021A880 /* WeatherTests.swift */,
 			);
@@ -244,8 +253,19 @@
 		629F34A42863139A00E3AA1C /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				629F34A8286314E200E3AA1C /* ContentViewModelTests.swift */,
+				629F34AC28631A1E00E3AA1C /* WeatherViewModelTests.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		629F34A5286313EB00E3AA1C /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				629F34A62863143700E3AA1C /* StubCityPreferences.swift */,
+				629F34AA2863199200E3AA1C /* StubWeatherRepository.swift */,
+			);
+			path = Mocks;
 			sourceTree = "<group>";
 		};
 		62AAD447285D90D3008D64FC /* Repository */ = {
@@ -486,7 +506,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				629F34AB2863199200E3AA1C /* StubWeatherRepository.swift in Sources */,
 				628AE03F285B94C50021A880 /* WeatherTests.swift in Sources */,
+				629F34A72863143700E3AA1C /* StubCityPreferences.swift in Sources */,
+				629F34A9286314E200E3AA1C /* ContentViewModelTests.swift in Sources */,
+				629F34AD28631A1E00E3AA1C /* WeatherViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
