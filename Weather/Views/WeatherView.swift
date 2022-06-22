@@ -40,12 +40,12 @@ struct WeatherView: View {
         TabView {
             HourlyView(viewModel: hourlyVM)
                 .tabItem {
-                    Label("Hourly", systemImage: "list.dash")
+                    Label("Hourly", systemImage: "clock")
                 }
             
             DailyView(viewModel: dailyVM)
                 .tabItem {
-                    Label("Daily", systemImage: "square.and.pencil")
+                    Label("Daily", systemImage: "calendar")
                 }
         }
     }
@@ -53,7 +53,7 @@ struct WeatherView: View {
     private func cityIcon() -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             NavigationLink {
-                CitiesView(viewModel: CitiesViewModel(cities: CityLoader().loadCities(), city: $viewModel.city))
+                CitiesView(viewModel: CitiesViewModel(cities: CityLoader().loadCities(), city: $viewModel.city, preferencesType: CityPreferences()))
             } label: {
                 Image(systemName: "magnifyingglass").imageScale(.large)
             }

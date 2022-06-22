@@ -33,6 +33,10 @@ struct City: Decodable {
         dailyWeather = try container.decodeIfPresent([Weather].self, forKey: CityKeys.daily)
         hourlyWeather = try container.decodeIfPresent([Weather].self, forKey: CityKeys.hourly)
     }
+    
+    init() {
+        coordinates = Coordinates()
+    }
 }
 
 extension City: Equatable {

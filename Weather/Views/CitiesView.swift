@@ -16,7 +16,7 @@ struct CitiesView: View {
         List {
             ForEach(viewModel.cityViewModels) { item in
                 Button {
-                    viewModel.selectedCity = item.city
+                    viewModel.saveCity(item.city)
                     self.dismiss()
                 } label: {
                     cityView(for: item)
@@ -41,6 +41,6 @@ struct CitiesView: View {
 
 struct CitiesView_Previews: PreviewProvider {
     static var previews: some View {
-        CitiesView(viewModel: CitiesViewModel(cities: CityLoader().loadCities(), city: .constant(CityLoader().loadCities().first!)))
+        CitiesView(viewModel: CitiesViewModel(cities: CityLoader().loadCities(), preferencesType: CityPreferences()))
     }
 }

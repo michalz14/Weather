@@ -12,17 +12,28 @@ class CitiesViewModel: ObservableObject {
     
     var cities: [City]
     @Binding var selectedCity: City
+    let preferencesType: CityPreferencesType
     
     var cityViewModels = [CityViewModel]()
     
-    init(cities: [City], city: Binding<City>) {
+    init(cities: [City],
+         city: Binding<City> = .constant(City()),
+         preferencesType: CityPreferencesType) {
         self.cities = cities
         self._selectedCity = city
+        self.preferencesType = preferencesType
         
         cityViewModels = cities.map({ CityViewModel(city: $0,
                                                     isSelected: $0 == selectedCity) })
     }
     
+    
+    func saveCity(_ city: City) {
+        selectedCity = city
+        if let cityName = city.name {
+            preferencesType.save(cityName: cityName)
+        }
+    }
 }
 
 extension CitiesViewModel {

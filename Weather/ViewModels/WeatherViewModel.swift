@@ -27,6 +27,10 @@ final class WeatherViewModel: ObservableObject {
         subscribe()
     }
     
+    deinit {
+        bag.removeAll()
+    }
+    
     private func subscribe() {
         _city.projectedValue
             .removeDuplicates()
