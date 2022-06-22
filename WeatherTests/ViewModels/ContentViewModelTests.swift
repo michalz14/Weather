@@ -27,16 +27,6 @@ class ContentViewModelTests: XCTestCase {
         sut = ContentViewModel(preferencesType: preferences)
         XCTAssertEqual(sut.state.rawValue(), 1, "Invalid State. Should be equal to 1, but its sut.state.rawValue()")
     }
-    
-    func testWeatherStateAfterSaving() {
-        preferences = StubCityPreferences()
-        preferences.isCityEmpty = true
-        sut = ContentViewModel(preferencesType: preferences)
-        preferences.save(cityName: "Poznan")
-        
-        XCTAssertEqual(sut.state.rawValue(), 1, "Invalid State. Should be equal to 1, but its sut.state.rawValue()")
-    }
-    
 }
 
 private extension ContentViewModel.State {
