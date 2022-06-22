@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-class ContentViewModel {
+final class ContentViewModel: ObservableObject {
     
     private var bag = Set<AnyCancellable>()
     @Published private(set) var state = State.idle
@@ -25,7 +25,6 @@ class ContentViewModel {
     }
     
     private func subscribe() {
-        //TODO: Mam z tym problem. Otrzymuję init state natomiast nie dostaję nowych wartości z publishera z User Defaults. Proszę o drobne review
         preferencesType.savedCity
             .sink { [weak self] value in
                 self?.setupState(for: value)

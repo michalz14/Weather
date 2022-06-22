@@ -14,7 +14,6 @@ struct CurrentWeatherView: View {
     var body: some View {
         VStack(spacing: 16) {
             HStack {
-                //TODO: Nie odświeża się ten remote image przy zmianie miasta. Nie udało mi sie rozwiązać tego problem. Proszę o małe review.
                 RemoteImage(url: viewModel.icon)
                     .frame(width: 102, height: 102)
                 Spacer()

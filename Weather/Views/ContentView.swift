@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     
-    var viewModel: ContentViewModel
+    @ObservedObject var viewModel: ContentViewModel
     
     var body: some View {
         switch viewModel.state {

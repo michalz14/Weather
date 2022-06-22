@@ -15,7 +15,7 @@ protocol CityPreferencesType: AnyObject {
 }
 
 private struct CityPreferencesKeys {
-    static let mainCity = "main_city"
+    static let mainCity = "savedCityName"
 }
 
 final class CityPreferences: CityPreferencesType {
