@@ -9,13 +9,13 @@ import SwiftUI
 
 struct WeatherView: View {
     
+    @State private var selectedItem = 0
     @ObservedObject var viewModel: WeatherViewModel
     
     var body: some View {
         NavigationView {
             if let currentVM = viewModel.currentWeatherViewModel,
-               let hourlyVM = viewModel.hourlyWeatherViewModel,
-               let dailyVM = viewModel.dailyWeatherViewModel {
+               let hourlyVM = viewModel.hourlyWeatherViewModel {
                 VStack {
                     CurrentWeatherView(viewModel: currentVM)
                         .navigationBarTitleDisplayMode(.inline)
@@ -23,26 +23,41 @@ struct WeatherView: View {
                             titleView()
                             cityIcon()
                         }
-                    tabbar(hourlyVM: hourlyVM, dailyVM: dailyVM)
+                    tabbar(hourlyVM: hourlyVM)
                 }
             } else {
-                EmptyView()
+                spinner.eraseToAnyView()
             }
         }
         .navigationViewStyle(.stack)
     }
     
-    private func tabbar(hourlyVM: HourlyViewModel, dailyVM: DailyViewModel) -> some View {
-        TabView {
+    private var spinner: Spinner { Spinner(isAnimating: true, style: .large) }
+    
+    private func tabbar(hourlyVM: HourlyViewModel) -> some View {
+        TabView(selection: $selectedItem) {
             HourlyView(viewModel: hourlyVM)
                 .tabItem {
                     Label("Hourly", systemImage: "clock")
                 }
+                .tag(0)
             
-            DailyView(viewModel: dailyVM)
+            dailySection()
+                .onAppear(perform: {
+                    viewModel.fetchDailyWeather()
+                })
                 .tabItem {
                     Label("Daily", systemImage: "calendar")
                 }
+                .tag(1)
+        }
+    }
+    
+    private func dailySection() -> some View {
+        if let dailyVM = viewModel.dailyWeatherViewModel {
+            return DailyView(viewModel: dailyVM).eraseToAnyView()
+        } else {
+            return spinner.eraseToAnyView()
         }
     }
     

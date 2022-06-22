@@ -40,7 +40,7 @@ final class WeatherViewModel: ObservableObject {
             .sink(receiveValue: {  [weak self] city in
                 self?.cityName = Just(city.name ?? "")
                 self?.fetchHourlyWeather()
-                self?.fetchDailyWeather()
+                self?.dailyWeatherViewModel = nil
             })
         .store(in: &bag)
     }
@@ -52,6 +52,12 @@ final class WeatherViewModel: ObservableObject {
         if let hourly = city.hourlyWeather {
             hourlyWeatherViewModel = HourlyViewModel(items: hourly)
         }
+        if let daily = city.dailyWeather {
+            dailyWeatherViewModel = DailyViewModel(items: daily)
+        }
+    }
+    
+    private func setupDailyViewModel() {
         if let daily = city.dailyWeather {
             dailyWeatherViewModel = DailyViewModel(items: daily)
         }
@@ -77,7 +83,7 @@ extension WeatherViewModel {
             .eraseToAnyPublisher()
             .sink(receiveValue: { [weak self] city in
                 self?.city.dailyWeather = city.dailyWeather
-                self?.setupViewModels()
+                self?.setupDailyViewModel()
             })
     }
 }
