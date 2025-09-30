@@ -1,0 +1,641 @@
+1.
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+require 'plist'
+require_relative 'codegen'
+require_relative 'plist_to_swift'
+require_relative 'protocol_generator'
+
+class ConfigGenerator
+  CONFIG_FILES = [
+    'Configurations/ConfigurationUREV.plist',
+    'Configurations/ConfigurationPREM.plist'
+  ].freeze
+
+  def initialize
+    @generated_files = []
+  end
+
+  def generate_all
+    puts "🚀 Uruchamianie generatora konfiguracji..."
+    
+  # Krok 1: Wygeneruj główny struct Configuration ze wszystkich danych plist
+  generate_main_configuration_struct
+
+  # Krok 2: Wygeneruj <Main>Protocol korzystając z ProtocolGenerator
+  generate_configuration_protocol
+
+    # Krok 3: Generuj struktury Swift z plików plist
+    generate_swift_structs
+
+    
+    puts "✅ Wszystkie konfiguracje zostały wygenerowane!"
+    puts "📁 Wygenerowane pliki: #{@generated_files.join(', ')}"
+  end
+
+  private
+
+  def generate_main_configuration_struct
+    puts "\n📝 Generowanie głównej struktury Configuration..."
+    merged_data = merge_all_plist_data
+
+    analyzer = PlistAnalyzer.new(merged_data)
+    struct_registry = analyzer.analyze
+
+    # Używamy teraz wspólnego SwiftCodeGenerator z opcjami aby uniknąć duplikacji
+    generator = SwiftCodeGenerator.new(
+      struct_registry,
+      type_prefix: nil,
+      skip_nested_structs: false,
+      property_access: 'public ',
+      with_defaults: false,
+      include_constructors: true
+    )
+
+    swift_code = generator.generate_main_struct(
+      merged_data,
+      'Configuration',
+      header: 'public struct Configuration: ConfigurationProtocol'
+    )
+
+    File.write('Configuration.swift', swift_code)
+    @generated_files << 'Configuration.swift'
+    puts "  ✅ Wygenerowano Configuration.swift przy użyciu współdzielonego generatora"
+  end
+
+  def generate_configuration_protocol
+    puts "\n📝 Generowanie ConfigurationProtocol..."
+    unless File.exist?('Configuration.swift')
+      puts "  ❌ Błąd: Plik Configuration.swift nie istnieje!"
+      return
+    end
+    begin
+  protocol_gen = ProtocolGenerator.new
+      protocol_gen.generate_configuration_protocol_from_configuration('Configuration.swift')
+      @generated_files << 'ConfigurationProtocol.swift' if File.exist?('ConfigurationProtocol.swift')
+    rescue => e
+      puts "  ❌ Błąd podczas generowania protokołu: #{e.message}"
+    end
+  end
+
+
+  def merge_all_plist_data
+    puts "  🔄 Łączenie danych ze wszystkich plików plist..."
+    
+    merged_data = {}
+    
+    CONFIG_FILES.each do |plist_file|
+      if File.exist?(plist_file)
+        begin
+          plist_data = Plist.parse_xml(plist_file)
+          
+          # Rekurencyjnie łącz dane - w tym zagnieżdżone struktury
+          merge_recursive(merged_data, plist_data)
+          
+        rescue => e
+          puts "    ❌ Błąd podczas łączenia #{plist_file}: #{e.message}"
+        end
+      end
+    end
+    
+    puts "    📊 Połączono #{merged_data.size} unikalnych kluczy głównych"
+    merged_data
+  end
+
+  def merge_recursive(target, source)
+    source.each do |key, value|
+      if target.key?(key)
+        # Klucz już istnieje - sprawdź co zrobić
+        if target[key].is_a?(Hash) && value.is_a?(Hash)
+          # Oba są hashami - łącz rekurencyjnie
+          merge_recursive(target[key], value)
+        elsif target[key].is_a?(Array) && value.is_a?(Array)
+          # Oba są tablicami - łącz unikalne elementy
+          target[key] = (target[key] + value).uniq
+        else
+          # W innych przypadkach zachowaj pierwszą wartość
+          # (już jest w target, nie nadpisuj)
+        end
+      else
+        # Nowy klucz - dodaj
+        if value.is_a?(Hash)
+          target[key] = value.dup
+        elsif value.is_a?(Array)
+          target[key] = value.dup
+        else
+          target[key] = value
+        end
+      end
+    end
+  end
+
+  # Lokalny helper używany przy generowaniu pustych konstruktorów zagnieżdżonych struktur
+
+  def generate_swift_structs
+    puts "\n📝 Generowanie struktur Swift..."
+    
+    CONFIG_FILES.each do |plist_file|
+      if File.exist?(plist_file)
+        puts "  🔄 Przetwarzanie: #{plist_file}"
+        
+        begin
+          # Generujemy pliki konfiguracyjne tak, aby:
+          # - nie generowały lokalnych zagnieżdżonych struktur
+          # - używały typów z Configuration (prefiks Configuration.)
+          # - nie wymuszały żadnego protokołu
+          generator = PlistToSwiftGenerator.new(
+            plist_file,
+            type_prefix: 'Configuration',
+            skip_nested_structs: true
+          )
+          generator.generate
+          
+          # Dodaj wygenerowany plik do listy
+          struct_name = extract_struct_name_from_plist(plist_file)
+          swift_file = "#{struct_name}.swift"
+          @generated_files << swift_file if File.exist?(swift_file)
+          
+          puts "  ✅ Wygenerowano: #{swift_file}"
+        rescue => e
+          puts "  ❌ Błąd podczas generowania #{plist_file}: #{e.message}"
+        end
+      else
+        puts "  ⚠️  Plik nie istnieje: #{plist_file}"
+      end
+    end
+  end
+
+  def extract_struct_name_from_plist(plist_file)
+    base_name = File.basename(plist_file, '.plist')
+  end
+end
+
+# Uruchomienie jeśli skrypt jest wywołany bezpośrednio
+if __FILE__ == $0
+  generator = ConfigGenerator.new
+  generator.generate_all
+end
+
+
+2.
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+require 'plist'
+require 'optparse'
+require_relative 'codegen'
+
+# Klasa reprezentująca opcjonalną wartość w strukturze
+class OptionalValue
+  attr_reader :value
+  
+  def initialize(value)
+    @value = value
+  end
+end
+
+# Klasa odpowiedzialna za generowanie kodu Swift
+class SwiftCodeGenerator
+  # options:
+  #  :property_access (String) => e.g. 'public '
+  #  :with_defaults (Boolean) => include default value literals
+  #  :include_constructors (Boolean) => generate memberwise init with defaulted params for nested structs
+  def initialize(struct_registry, type_prefix: nil, skip_nested_structs: false, property_access: '', with_defaults: true, include_constructors: false)
+    @struct_registry = struct_registry
+    @type_prefix = type_prefix
+    @skip_nested_structs = skip_nested_structs
+  # literals are generated via Codegen::Defaults now
+    @shared_structs = {}
+    @property_access = property_access
+    @with_defaults = with_defaults
+    @include_constructors = include_constructors
+  end
+
+  def generate_main_struct(data, struct_name, header: nil)
+    detect_shared_structs
+
+    local_structs = @struct_registry.reject { |name, _| @shared_structs.key?(name) }
+    nested_shared_structs = @skip_nested_structs ? "" : generate_nested_structs_from_registry(@shared_structs)
+    nested_local_structs = @skip_nested_structs ? "" : generate_nested_structs_from_registry(local_structs)
+
+    properties = generate_properties(data)
+
+    struct_header = header || "struct #{struct_name}"
+
+    result = ""
+    result += <<~SWIFT
+import Foundation
+
+#{struct_header} {
+#{nested_shared_structs}#{nested_local_structs}#{properties.join("\n")}
+}
+    SWIFT
+    result
+  end
+
+  private
+
+  def generate_properties(data)
+    data.map do |key, value|
+      property_name = Codegen::Naming.property_name_from_key(key)
+  swift_type = Codegen::Defaults.swift_type(value, key, type_prefix: @type_prefix)
+      line = if @with_defaults
+  default_value = Codegen::Defaults.generate_literal(value, key, type_prefix: @type_prefix)
+        "#{@property_access}let #{property_name}: #{swift_type} = #{default_value}"
+      else
+        "#{@property_access}let #{property_name}: #{swift_type}"
+      end
+  Codegen.indent(line)
+    end
+  end
+
+  def generate_nested_structs_from_registry(struct_registry)
+    return "" if struct_registry.empty?
+    nested = struct_registry.map do |struct_name, properties|
+      generate_nested_struct_definition(properties, struct_name)
+    end.join("\n\n")
+    nested.empty? ? "" : "#{nested}\n"
+  end
+
+  def detect_shared_structs
+    @struct_registry.each do |struct_name, properties|
+      if should_be_shared?(struct_name, properties)
+        @shared_structs[struct_name] = properties
+      end
+    end
+  end
+
+  def should_be_shared?(_struct_name, properties)
+    properties.all? { |_, value| !value.is_a?(Hash) && !value.is_a?(Array) }
+  end
+
+  # (Usunięto generowanie top-level shared structów – są teraz zagnieżdżane w strukturze głównej)
+
+  def generate_nested_struct_definition(data, struct_name)
+    # Nested struct header with same access level as properties (if access is 'public ' include it for struct)
+    struct_access = @property_access
+    nested_header = struct_access.empty? ? "struct #{struct_name}" : "#{struct_access}struct #{struct_name}"
+    properties = data.map do |key, value|
+      name = Codegen::Naming.property_name_from_key(key)
+  swift_type = Codegen::Defaults.swift_type(value, key, type_prefix: @type_prefix)
+      line = if @with_defaults
+  default_value = Codegen::Defaults.generate_literal(value, key, type_prefix: @type_prefix)
+        "#{struct_access}let #{name}: #{swift_type} = #{default_value}"
+      else
+        "#{struct_access}let #{name}: #{swift_type}"
+      end
+  Codegen.indent(line, 2)
+    end
+
+    constructor_block = if @include_constructors
+      ctor = generate_constructor(data, struct_name, struct_access)
+  ctor.empty? ? "" : "\n" + Codegen.indent(ctor, 2) + "\n"
+    else
+      ""
+    end
+
+    body = properties.join("\n")
+  header_line = Codegen.indent("#{nested_header} {", 1)
+    lines = [header_line]
+    lines << body unless body.empty?
+    lines << constructor_block.rstrip unless constructor_block.empty?
+  lines << Codegen.indent('}', 1)
+    lines.join("\n")
+  end
+
+  def generate_constructor(data, _struct_name, access)
+    return "#{access}init() { }" if data.empty?
+    # Memberwise with defaulted params using Codegen defaults (no literal generator because defaults may differ for optionals)
+    params = []
+    assignments = []
+    data.each do |key, value|
+      name = Codegen::Naming.property_name_from_key(key)
+  swift_type = Codegen::Defaults.swift_type(value, key, type_prefix: @type_prefix)
+      default_val = Codegen::Defaults.value_for_type(swift_type)
+      params << "#{name}: #{swift_type} = #{default_val}"
+  assignments << Codegen.indent("self.#{name} = #{name}", 1)
+    end
+    <<~CTOR.chomp
+#{access}init(#{params.join(', ')}) {
+#{assignments.join("\n")}
+}
+    CTOR
+  end
+
+  # indent is centralized in Codegen.indent
+end
+
+# Klasa odpowiedzialna za analizę typów i struktur w plist
+class PlistAnalyzer
+  def initialize(data)
+    @data = data
+    @struct_registry = {}
+  end
+
+  # Analizuje dane i zwraca strukturę metadanych
+  def analyze
+    collect_struct_definitions(@data)
+    @struct_registry
+  end
+
+  private
+
+  def collect_struct_definitions(data, parent_key = nil)
+    data.each do |key, value|
+      process_value(value, key)
+    end
+  end
+
+  def process_value(value, key)
+    case value
+    when Hash
+      register_struct_from_hash(value, key)
+    when Array
+      process_array(value, key)
+    when OptionalValue
+      process_value(value.value, key) if value.value
+    end
+  end
+
+  def process_array(array, key)
+    return if array.empty?
+    
+    dict_elements = array.select { |el| el.is_a?(Hash) }
+    return if dict_elements.empty?
+    
+    register_struct_from_array(dict_elements, key)
+  end
+
+  def register_struct_from_hash(hash, key)
+  struct_name = Codegen::Naming.struct_name_from_key(key)
+    return if @struct_registry.key?(struct_name)
+    
+    @struct_registry[struct_name] = hash
+    collect_struct_definitions(hash)
+  end
+
+  def register_struct_from_array(hash_array, key)
+  struct_name = Codegen::Naming.array_element_struct_name(key)
+    return if @struct_registry.key?(struct_name)
+    
+    merged_properties = merge_hash_properties(hash_array)
+    @struct_registry[struct_name] = merged_properties
+    collect_struct_definitions(merged_properties)
+  end
+
+  def merge_hash_properties(hash_array)
+    return {} if hash_array.empty?
+    
+    all_keys = hash_array.flat_map(&:keys).uniq
+    merged = {}
+    
+    all_keys.each do |key|
+      sample_value = hash_array.find { |hash| hash.key?(key) }&.[](key)
+      appears_in_all = hash_array.all? { |hash| hash.key?(key) }
+      
+      merged[key] = appears_in_all ? sample_value : OptionalValue.new(sample_value)
+    end
+    
+    merged
+  end
+end
+
+# Klasa odpowiedzialna za walidację
+## FileValidator removed – basic validation omitted at this stage
+
+# Główna klasa generatora
+class PlistToSwiftGenerator
+  def initialize(input_file, type_prefix: nil, skip_nested_structs: false)
+    @input_file = input_file
+    @type_prefix = type_prefix
+    @skip_nested_structs = skip_nested_structs
+  end
+
+  def generate
+    # Input validation omitted – assuming valid @input_file
+    
+    puts "Parsowanie pliku: #{@input_file}"
+    plist_data = parse_plist_file
+    
+    puts "Analizowanie struktur..."
+    analyzer = PlistAnalyzer.new(plist_data)
+    struct_registry = analyzer.analyze
+    
+    puts "Generowanie kodu Swift..."
+  main_struct_name = Codegen::Naming.main_struct_name_from_filename(@input_file)
+    code_generator = SwiftCodeGenerator.new(struct_registry, type_prefix: @type_prefix, skip_nested_structs: @skip_nested_structs)
+    swift_code = code_generator.generate_main_struct(plist_data, main_struct_name)
+    
+    output_file = "#{main_struct_name}.swift"
+    save_swift_file(swift_code, output_file)
+    
+    puts "✅ Kod Swift został wygenerowany i zapisany do: #{output_file}"
+  end
+
+  private
+
+  def parse_plist_file
+    Plist.parse_xml(@input_file)
+  end
+
+  def save_swift_file(swift_code, filename)
+    File.write(filename, swift_code)
+  end
+end
+
+# CLI Interface
+class CLI
+  VERSION = '2.1.0'.freeze
+
+  def self.run
+    options = parse_arguments
+    return if options[:exit]
+    
+    input_file = ARGV[0]
+    generator = PlistToSwiftGenerator.new(
+      input_file,
+      type_prefix: options[:type_prefix],
+      skip_nested_structs: options[:skip_nested_structs]
+    )
+    generator.generate
+  end
+
+  private
+
+  def self.parse_arguments
+    options = {}
+    
+  OptionParser.new do |opts|
+      opts.banner = "Użycie: ruby plist_to_swift.rb [opcje] [ścieżka_do_pliku.plist]"
+      
+      opts.on("-h", "--help", "Pokaż tę pomoc") do
+        puts opts
+        options[:exit] = true
+      end
+      
+      opts.on("-v", "--version", "Pokaż wersję") do
+        puts "plist_to_swift.rb v#{VERSION}"
+        options[:exit] = true
+      end
+      opts.on("--type-prefix NAME", "Dodaj prefiks do nazw struktur (np. Configuration)") do |name|
+        options[:type_prefix] = name
+      end
+      opts.on("--skip-nested-structs", "Nie generuj zagnieżdżonych struktur w pliku docelowym") do
+        options[:skip_nested_structs] = true
+      end
+      # No protocol-related options; simplified generator
+    end.parse!
+    
+    options
+  end
+end
+
+# Uruchomienie programu
+if __FILE__ == $0
+  CLI.run
+end
+
+3.
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+require_relative 'codegen'
+
+class ProtocolGenerator
+
+  # Public API: generate ConfigurationProtocol.swift based on Configuration.swift
+  def generate_configuration_protocol_from_configuration(configuration_file)
+    unless File.exist?(configuration_file)
+      puts "  ❌ Błąd: Plik #{configuration_file} nie istnieje!"
+      return
+    end
+
+    content = File.read(configuration_file)
+    details = extract_main_struct_details(content)
+    unless details
+      puts "  ❌ Nie znaleziono głównej struktury w #{configuration_file}"
+      return
+    end
+
+    main_name = details[:name]
+    main_properties = details[:properties]
+    protocol_code = generate_configuration_protocol_code(main_properties, main_name)
+    out_file = "#{main_name}Protocol.swift"
+    File.write(out_file, protocol_code)
+    puts "  ✅ Wygenerowano #{out_file} z #{main_properties.size} właściwościami"
+  end
+
+  # ==== Helpers for ConfigurationProtocol generation ====
+  def extract_main_struct_details(content)
+    properties = []
+    lines = content.split("\n")
+    main_name = nil
+    in_main_struct = false
+    main_brace_level = 0
+    in_nested_struct = false
+    nested_brace_level = 0
+
+    lines.each do |line|
+      stripped_line = line.strip
+
+      # wykryj pierwszą public struct <Name>
+      if !in_main_struct && (m = stripped_line.match(/^public\s+struct\s+(\w+)/))
+        main_name = m[1]
+        in_main_struct = true
+        main_brace_level += line.count('{')
+        next
+      end
+
+      next unless in_main_struct
+
+      # aktualizuj poziom nawiasów głównej struktury
+      main_brace_level += line.count('{')
+      main_brace_level -= line.count('}')
+
+      # wejście w zagnieżdżoną strukturę
+      if stripped_line.match(/^\s*public\s+struct\s+\w+/)
+        in_nested_struct = true
+        nested_brace_level = 0
+      end
+
+      if in_nested_struct
+        nested_brace_level += line.count('{')
+        nested_brace_level -= line.count('}')
+        in_nested_struct = false if nested_brace_level <= 0
+        next
+      end
+
+      if (m = stripped_line.match(/^\s*public\s+let\s+(\w+):\s+(.+)$/))
+        property_name = m[1]
+        property_type = m[2]
+        converted_type = convert_nested_type_to_protocol_type(property_type, main_name)
+        properties << { name: property_name, type: converted_type }
+      end
+
+      # Wyjście z głównej struktury
+      if main_brace_level <= 0
+        break
+      end
+    end
+
+    return nil unless main_name
+    { name: main_name, properties: properties }
+  end
+
+  def convert_nested_type_to_protocol_type(type, main_name)
+    t = type.dup
+    is_optional = t.end_with?("?")
+    t = t[0..-2] if is_optional
+
+    if t.start_with?("[") && t.end_with?("]")
+      inner = t[1..-2]
+      inner = convert_nested_type_to_protocol_type(inner, main_name)
+      inner = inner.chomp('?')
+      t2 = "[#{inner}]"
+      return is_optional ? "#{t2}?" : t2
+    end
+
+    base_types = %w[String Int Double Bool Date Any]
+    if t.match(/^[A-Z][A-Za-z0-9_]*$/) && !base_types.include?(t) && !t.include?(".")
+      t = "#{main_name}.#{t}"
+    end
+
+    is_optional ? "#{t}?" : t
+  end
+
+  def generate_configuration_protocol_code(properties, main_name)
+    protocol_name = "#{main_name}Protocol"
+    protocol_properties = properties.map do |prop|
+      "    var #{prop[:name]}: #{prop[:type]} { get }"
+    end.join("\n")
+
+    extension_properties = properties.map do |prop|
+      default_value = generate_default_value_for_type(prop[:type])
+      "    public var #{prop[:name]}: #{prop[:type]} { #{default_value} }"
+    end.join("\n")
+
+    <<~SWIFT
+      import Foundation
+
+      public protocol #{protocol_name} {
+      #{protocol_properties}
+      }
+
+      public extension #{protocol_name} {
+      #{extension_properties}
+      }
+    SWIFT
+  end
+
+  def generate_default_value_for_type(type)
+  Codegen::Defaults.value_for_type(type)
+  end
+
+end
+
+# Uruchomienie jeśli skrypt jest wywołany bezpośrednio
+if __FILE__ == $0
+  config_file = ARGV[0]
+  ProtocolGenerator.new.generate_configuration_protocol_from_configuration(config_file)
+end
